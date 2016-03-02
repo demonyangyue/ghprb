@@ -189,18 +189,20 @@ public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStat
         }
 
         sb.append(" ");
-        GhprbTrigger trigger = Ghprb.extractTrigger(build);
-        if (trigger == null) {
-            listener.getLogger().println("Unable to get pull request builder trigger!!");
-        } else {
-            JobConfiguration jobConfiguration =
-                            JobConfiguration.builder()
-                                            .printStackTrace(trigger.getDisplayBuildErrorsOnDownstreamBuilds()).build();
 
-            GhprbBuildManager buildManager = GhprbBuildManagerFactoryUtil.getBuildManager(build, jobConfiguration);
-            if (getAddTestResults()) {
-                sb.append(buildManager.getOneLineTestResults());
-            }
+        GhprbTrigger trigger = Ghprb.extractTrigger(build);
+        Boolean displayErrors = false;
+        if (trigger != null) {
+            displayErrors = trigger.getDisplayBuildErrorsOnDownstreamBuilds();
+        }
+
+        JobConfiguration jobConfiguration =
+                        JobConfiguration.builder()
+                                        .printStackTrace(displayErrors).build();
+
+        GhprbBuildManager buildManager = GhprbBuildManagerFactoryUtil.getBuildManager(build, jobConfiguration);
+        if (trigger == null || getAddTestResults()) {
+            sb.append(buildManager.getOneLineTestResults());
         }
 
         createCommitStatus(build, listener, sb.toString(), repo, state);
